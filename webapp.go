@@ -18,10 +18,13 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 
-	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
+	lineChannelID := os.Getenv("LINE_CHANNEL_ID")
 	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
-	bot, err := linebot.New(lineAccessToken, lineChannelSecret)
+	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
 
+	bot, err := linebot.New(lineChannelSecret, lineAccessToken)
+
+	log.Print(lineChannelID)
 	events, err := bot.ParseRequest(r)
 	if err != nil {
 		// Do something when something bad happened.
@@ -56,7 +59,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			// Do Something...
 			message := "This is replay. Your message ID = " + targetID
 			if _, err := bot.ReplyMessage(replyToken, linebot.NewTextMessage(message)).Do(); err != nil {
-
+				log.Print(err)
 			}
 		case linebot.EventTypeFollow:
 			// Do Something...
