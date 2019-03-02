@@ -15,6 +15,10 @@ ADD . /go
 RUN ["make"]
 
 FROM alpine:latest
+RUN apk add -U --no-cache \
+  ca-certificates \
+  && update-ca-certificates 2>/dev/null || true \
+  && rm -rf /var/cache/apk/*
 
 WORKDIR /go
 COPY --from=builder /go/webapp_linux_amd64 /go/webapp_linux_amd64
