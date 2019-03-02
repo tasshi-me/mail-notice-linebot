@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -26,6 +25,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	events, err := bot.ParseRequest(r)
 	if err != nil {
 		// Do something when something bad happened.
+		log.Print(err)
+		w.WriteHeader(404)
+		return
 	}
 
 	for _, event := range events {
@@ -33,7 +35,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		var userID string
 		var groupID string
 		var RoomID string
-		fmt.Println(event.Source.Type)
+		log.Print(event.Source.Type)
 		switch event.Source.Type {
 		case linebot.EventSourceTypeUser:
 			userID = event.Source.UserID
@@ -48,7 +50,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		replyToken := event.ReplyToken
 
-		fmt.Println(event.Type)
+		log.Print(event.Type)
 		switch event.Type {
 		case linebot.EventTypeMessage:
 			// Do Something...
