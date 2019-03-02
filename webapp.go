@@ -137,11 +137,43 @@ func sendConfirmSetupForwardingMessage(bot *linebot.Client, replyToken string) {
 	}
 }
 
+func sendConfirmRevikeForwardingMessage(bot *linebot.Client, replyToken string) {
+	// Send Current registered addres and confirm resetting
+	var messages []linebot.SendingMessage
+
+	addresses := []string{"a@a.a", "b@b.b", "c@c.c"}
+
+	// Current e-mail addresses
+	var textContents = "こんにちは！メールお知らせくんです。\n"
+	if len(addresses) > 0 {
+		textContents = textContents + "現在お知らせ設定されているメールアドレスは\n" + strings.Join(addresses, "\n") + "\nです"
+	} else {
+		textContents = textContents + "現在お知らせ設定されているメールアドレスはありません"
+	}
+	messages = append(messages, linebot.NewTextMessage(textContents))
+
+	if len(addresses) <= 0 {
+		return
+	}
+
+	// Confirm template message
+	altText := "メールお知らせを解除しますか？"
+	leftBtn := linebot.NewPostbackAction("はい", "revoke=true", "", "はい")
+	rightBtn := linebot.NewPostbackAction("いいえ", "revoke=false", "", "いいえ")
+	template := linebot.NewConfirmTemplate(altText, leftBtn, rightBtn)
+	messages = append(messages, linebot.NewTemplateMessage(altText, template))
+
+	// Send messages
+	if _, err := bot.ReplyMessage(replyToken, messages...).Do(); err != nil {
+		log.Print(err)
+	}
+}
+
 func sendRandomReply(bot *linebot.Client, replyToken string) {
 	contentPatterns := []string{
 		"ごめんなさい！よく分かりませんでした！",
-		"「メールお知らせくん」と呼んでいただければメール転送設定が確認できます",
-		"新しいメールはありません(たぶん)",
+		"「メールお知らせくん」と呼んでいただければメールお知らせ設定が確認できます",
+		"新しいメールはたぶんありません！",
 	}
 	// Randomize reply
 	rand.Seed(time.Now().UnixNano())
