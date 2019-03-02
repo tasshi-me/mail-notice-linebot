@@ -64,7 +64,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
 				if strings.Contains(message.Text, "メールお知らせ") || strings.Contains(message.Text, "メールおしらせ") {
-					sendConfirmSetupForwardingMessage(bot, replyToken)
+					sendConfirmSetupForwarding(bot, replyToken)
 				}
 			}
 			if eventSourceType == linebot.EventSourceTypeUser {
@@ -104,7 +104,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendConfirmSetupForwardingMessage(bot *linebot.Client, replyToken string) {
+func sendConfirmSetupForwarding(bot *linebot.Client, replyToken string) {
 	// Send Current registered addres and confirm resetting
 	var messages []linebot.SendingMessage
 
@@ -113,18 +113,18 @@ func sendConfirmSetupForwardingMessage(bot *linebot.Client, replyToken string) {
 	// Current e-mail addresses
 	var textContents = "こんにちは！メールお知らせくんです。\n"
 	if len(addresses) > 0 {
-		textContents = textContents + "現在転送設定されているメールアドレスは\n" + strings.Join(addresses, "\n") + "\nです"
+		textContents = textContents + "現在お知らせ設定されているメールアドレスは\n" + strings.Join(addresses, "\n") + "\nです"
 	} else {
-		textContents = textContents + "現在転送設定されているメールアドレスはありません"
+		textContents = textContents + "現在お知らせ設定されているメールアドレスはありません"
 	}
 	messages = append(messages, linebot.NewTextMessage(textContents))
 
 	// Confirm template message
 	var altText string
 	if len(addresses) > 0 {
-		altText = "メール転送を再設定しますか？"
+		altText = "メールお知らせを再設定しますか？"
 	} else {
-		altText = "メール転送を設定しますか？"
+		altText = "メールお知らせを設定しますか？"
 	}
 	leftBtn := linebot.NewPostbackAction("はい", "setup=true", "", "はい")
 	rightBtn := linebot.NewPostbackAction("いいえ", "setup=false", "", "いいえ")
@@ -137,7 +137,7 @@ func sendConfirmSetupForwardingMessage(bot *linebot.Client, replyToken string) {
 	}
 }
 
-func sendConfirmRevikeForwardingMessage(bot *linebot.Client, replyToken string) {
+func sendConfirmRevikeForwarding(bot *linebot.Client, replyToken string) {
 	// Send Current registered addres and confirm resetting
 	var messages []linebot.SendingMessage
 
