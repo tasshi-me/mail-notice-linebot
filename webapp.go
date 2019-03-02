@@ -11,9 +11,8 @@ import (
 
 func main() {
 	port := os.Getenv("PORT")
-	fmt.Println(port)
 	http.HandleFunc("/", handler)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }
@@ -34,6 +33,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		var userID string
 		var groupID string
 		var RoomID string
+		fmt.Println(event.Source.Type)
 		switch event.Source.Type {
 		case linebot.EventSourceTypeUser:
 			userID = event.Source.UserID
@@ -48,6 +48,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		replyToken := event.ReplyToken
 
+		fmt.Println(event.Type)
 		switch event.Type {
 		case linebot.EventTypeMessage:
 			// Do Something...
@@ -82,4 +83,5 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// template := linebot.NewConfirmTemplate("Hello World", leftBtn, rightBtn)
 
 	// message := linebot.NewTemplateMessage("Sorry :(, please update your app.", template)
+	w.WriteHeader(200)
 }
