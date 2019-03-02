@@ -63,9 +63,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		case linebot.EventTypeMessage:
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
-				if strings.Contains(message.Text, "メールお知らせ") || strings.Contains(message.Text, "メールおしらせ") {
+				switch {
+				case strings.Contains(message.Text, "メールお知らせ"):
+					fallthrough
+				case strings.Contains(message.Text, "メールおしらせ"):
 					sendConfirmSetupForwarding(bot, replyToken)
+				case strings.Contains(message.Text, "お知らせ解除"):
+					sendConfirmRevokeForwarding(bot, replyToken)
 				}
+
 			}
 			if eventSourceType == linebot.EventSourceTypeUser {
 				sendRandomReply(bot, replyToken)
@@ -137,7 +143,7 @@ func sendConfirmSetupForwarding(bot *linebot.Client, replyToken string) {
 	}
 }
 
-func sendConfirmRevikeForwarding(bot *linebot.Client, replyToken string) {
+func sendConfirmRevokeForwarding(bot *linebot.Client, replyToken string) {
 	// Send Current registered addres and confirm resetting
 	var messages []linebot.SendingMessage
 
