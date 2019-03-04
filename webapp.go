@@ -54,6 +54,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			//RoomID = event.Source.RoomID
 			targetID = event.Source.RoomID
 		}
+		log.Print("TargetID: ", targetID)
 
 		eventSourceType := event.Source.Type
 		replyToken := event.ReplyToken
@@ -79,10 +80,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		case linebot.EventTypeFollow:
 			// Send Introduction to user
-			message := "This is replay. Your message ID = " + targetID
-			if _, err := bot.ReplyMessage(replyToken, linebot.NewTextMessage(message)).Do(); err != nil {
-				log.Print(err)
-			}
+			sendIntroduction(bot, replyToken)
 		case linebot.EventTypeUnfollow:
 			// TODO: Delete User from database
 		case linebot.EventTypeJoin:
