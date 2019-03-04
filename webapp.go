@@ -86,8 +86,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		case linebot.EventTypeUnfollow:
 			// TODO: Delete User from database
 		case linebot.EventTypeJoin:
-			// TODO: Send Introduction to the group
-
+			// Send Introduction to the group
+			sendIntroduction(bot, replyToken)
 		case linebot.EventTypeLeave:
 			// TODO: Delete group from database
 		case linebot.EventTypeMemberJoined:
@@ -179,6 +179,7 @@ func sendRandomReply(bot *linebot.Client, replyToken string) {
 	contentPatterns := []string{
 		"ごめんなさい！よく分かりませんでした！",
 		"「メールお知らせくん」と呼んでいただければメールお知らせ設定が確認できます",
+		"「お知らせ解除」と言っていただければメールお知らせを解除できます",
 		"新しいメールはたぶんありません！",
 	}
 	// Randomize reply
@@ -187,6 +188,28 @@ func sendRandomReply(bot *linebot.Client, replyToken string) {
 	message := linebot.NewTextMessage(contentPatterns[i])
 	// Send messages
 	if _, err := bot.ReplyMessage(replyToken, message).Do(); err != nil {
+		log.Print(err)
+	}
+}
+
+func sendIntroduction(bot *linebot.Client, replyToken string) {
+	// Send Greeting and introduction
+	var messages []linebot.SendingMessage
+
+	// Greeting
+	var textContents = "登録ありがとうございます！メールお知らせくんです。\n"
+	textContents += "登録されたメールアドレスにメールが届くとお知らせします。\n"
+	messages = append(messages, linebot.NewTextMessage(textContents))
+
+	// Confirm template message
+	altText := "メールお知らせを設定しますか？"
+	leftBtn := linebot.NewPostbackAction("はい", "setup=true", "", "はい")
+	rightBtn := linebot.NewPostbackAction("いいえ", "setup=false", "", "いいえ")
+	template := linebot.NewConfirmTemplate(altText, leftBtn, rightBtn)
+	messages = append(messages, linebot.NewTemplateMessage(altText, template))
+
+	// Send messages
+	if _, err := bot.ReplyMessage(replyToken, messages...).Do(); err != nil {
 		log.Print(err)
 	}
 }
