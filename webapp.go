@@ -227,11 +227,11 @@ func sendIntroduction(bot *linebot.Client, replyToken string) {
 	}
 }
 
-func sendVerificationMail(userName, userAddress string) {
+func sendVerificationMail(userName, userAddress, verificationKey string) {
 	from := mail.Address{Name: os.Getenv("SENDER_USERNAME"), Address: os.Getenv("SENDER_ADDRESS")}
 	to := mail.Address{Name: userName, Address: userAddress}
 	subject := "LINEBOT: メールお知らせくん登録確認"
-	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：askdjfkashdflkjashdflkasjhd"
+	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：" + verificationKey
 	smptServerName := os.Getenv("SMTP_SERVER_NAME")
 	smtpAuthUser := os.Getenv("SMTP_AUTH_USER")
 	smtpAuthPassword := os.Getenv("SMTP_AUTH_PASSWORD")
