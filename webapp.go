@@ -8,14 +8,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 func main() {
+	if len(os.Getenv("DOTENV_LOADED")) < 1 {
+		DotEnvLoad()
+	}
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", handler)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
+	}
+}
+
+// DotEnvLoad load .env file
+func DotEnvLoad() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("DotEnv:", err)
 	}
 }
 
