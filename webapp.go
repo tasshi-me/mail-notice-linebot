@@ -4,9 +4,12 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/mail"
 	"os"
 	"strings"
 	"time"
+
+	"./mailmanager"
 
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -222,4 +225,15 @@ func sendIntroduction(bot *linebot.Client, replyToken string) {
 	if _, err := bot.ReplyMessage(replyToken, messages...).Do(); err != nil {
 		log.Print(err)
 	}
+}
+
+func sendVerificationMail(userName, userAddress string) {
+	from := mail.Address{Name: os.Getenv("SENDER_USERNAME"), Address: os.Getenv("SENDER_ADDRESS")}
+	to := mail.Address{Name: userName, Address: userAddress}
+	subject := "LINEBOT: メールお知らせくん登録確認"
+	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：askdjfkashdflkjashdflkasjhd"
+	smptServerName := os.Getenv("SMTP_SERVER_NAME")
+	smtpAuthUser := os.Getenv("SMTP_AUTH_USER")
+	smtpAuthPassword := os.Getenv("SMTP_AUTH_PASSWORD")
+	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }
