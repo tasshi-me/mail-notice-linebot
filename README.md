@@ -1,7 +1,9 @@
 # mail-notice-linebot
+
 メールが来たのを教えるLINEBOT
 
-# SETUP(Heroku)
+## SETUP(Heroku)
+
 ```bash
 #Heroku cli install
 $ brew tap heroku/brew && brew install heroku
@@ -25,4 +27,3 @@ $ heroku container:release <Your image name>
 $ heroku open
 
 ```
-
