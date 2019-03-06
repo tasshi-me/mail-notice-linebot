@@ -116,15 +116,56 @@ func FetchMail(mboxName, imapServerName, imapAuthUser, imapAuthPassword string) 
 		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
 	}()
 
-	log.Println("Last", maxMessages, "messages:")
-	for msg := range messages {
-		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+// DeleteMail :delete mails since specified datetime
+func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) {
+	if timeSince.IsZero() && timeBefore.IsZero() {
+		return
 	}
 
-	if err := <-done; err != nil {
-		log.Print(err)
+	c, err := client.DialTLS(imapServerName, nil)
+	if err != nil {
+		log.Panic(err)
 	}
 
-	return messages
+	defer c.Logout()
+
+	if err := c.Login(imapAuthUser, imapAuthPassword); err != nil {
+		log.Panic(err)
+	}
+
+	_, err = c.Select(mboxName, false)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// Set search criteria
+	criteria := imap.NewSearchCriteria()
+	if !timeSince.IsZero() {
+		criteria.Since = timeSince
+	}
+	if !timeBefore.IsZero() {
+		criteria.Before = timeBefore
+	}
+	ids, err := c.Search(criteria)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("IDs found:", ids)
+
+	if len(ids) > 0 {
+		seqset := new(imap.SeqSet)
+		seqset.AddNum(ids...)
+
+		//Mark as Deleted
+		item := imap.FormatFlagsOp(imap.AddFlags, true)
+		flags := []interface{}{imap.DeletedFlag}
+		if err := c.Store(seqset, item, flags, nil); err != nil {
+			log.Panic(err)
+		}
+
+		if err := c.Expunge(nil); err != nil {
+			log.Panic(err)
+		}
+	}
 
 }
