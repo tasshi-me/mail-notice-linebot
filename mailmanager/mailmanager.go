@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/mail"
 	"net/smtp"
+	"sync"
+	"time"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -82,8 +84,11 @@ func SendMail(from, to mail.Address, subject, body, smptServerName, smtpAuthUser
 }
 
 // FetchMail fetch email using imaps
-func FetchMail(mboxName, imapServerName, imapAuthUser, imapAuthPassword string) chan *imap.Message {
-	const maxMessages = 100
+func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) chan *imap.Message {
+	const maxMessages = 5
+	if timeSince.IsZero() && timeBefore.IsZero() {
+		return nil
+	}
 
 	c, err := client.DialTLS(imapServerName, nil)
 	if err != nil {
@@ -96,25 +101,56 @@ func FetchMail(mboxName, imapServerName, imapAuthUser, imapAuthPassword string) 
 		log.Panic(err)
 	}
 
-	mbox, err := c.Select(mboxName, false)
+	_, err = c.Select(mboxName, false)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	from := uint32(1)
-	to := mbox.Messages
-	if mbox.Messages > maxMessages {
-		// We're using unsigned integers here, only substract if the result is > 0
-		from = mbox.Messages - maxMessages
+	// Set search criteria
+	criteria := imap.NewSearchCriteria()
+	if !timeSince.IsZero() {
+		criteria.Since = timeSince
 	}
-	seqset := new(imap.SeqSet)
-	seqset.AddRange(from, to)
+	if !timeBefore.IsZero() {
+		criteria.Before = timeBefore
+	}
+	ids, err := c.Search(criteria)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("IDs found:", ids)
 
-	messages := make(chan *imap.Message, 10)
-	done := make(chan error, 1)
-	go func() {
-		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
-	}()
+	if len(ids) > 0 {
+		seqset := new(imap.SeqSet)
+		seqset.AddNum(ids...)
+
+		messages := make(chan *imap.Message, 10)
+		done := make(chan error, 1)
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+			wg.Done()
+		}()
+
+		wg.Wait()
+		log.Println("Last", maxMessages, "messages:")
+		var subject []string
+		for msg := range messages {
+			log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+			subject = append(subject, msg.Envelope.Subject)
+		}
+
+		if err := <-done; err != nil {
+			log.Print(err)
+		}
+
+		return messages
+
+	}
+
+	return nil
+}
 
 // DeleteMail :delete mails since specified datetime
 func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) {
