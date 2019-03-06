@@ -7,6 +7,9 @@ import (
 	"net"
 	"net/mail"
 	"net/smtp"
+
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
 )
 
 // SendMail with SMTPS
@@ -79,6 +82,49 @@ func SendMail(from, to mail.Address, subject, body, smptServerName, smtpAuthUser
 }
 
 // FetchMail fetch email using imaps
-func FetchMail() {
+func FetchMail(mboxName, imapServerName, imapAuthUser, imapAuthPassword string) chan *imap.Message {
+	const maxMessages = 100
+
+	c, err := client.DialTLS(imapServerName, nil)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	defer c.Logout()
+
+	if err := c.Login(imapAuthUser, imapAuthPassword); err != nil {
+		log.Panic(err)
+	}
+
+	mbox, err := c.Select(mboxName, false)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	from := uint32(1)
+	to := mbox.Messages
+	if mbox.Messages > maxMessages {
+		// We're using unsigned integers here, only substract if the result is > 0
+		from = mbox.Messages - maxMessages
+	}
+	seqset := new(imap.SeqSet)
+	seqset.AddRange(from, to)
+
+	messages := make(chan *imap.Message, 10)
+	done := make(chan error, 1)
+	go func() {
+		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+	}()
+
+	log.Println("Last", maxMessages, "messages:")
+	for msg := range messages {
+		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+	}
+
+	if err := <-done; err != nil {
+		log.Print(err)
+	}
+
+	return messages
 
 }
