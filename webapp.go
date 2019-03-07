@@ -239,3 +239,18 @@ func sendVerificationMail(userName, userAddress, verificationKey string) {
 	smtpAuthPassword := os.Getenv("SMTP_AUTH_PASSWORD")
 	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }
+
+func sendPushNotification(targetID, textContents string) {
+	//lineChannelID := os.Getenv("LINE_CHANNEL_ID")
+	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
+	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
+
+	bot, err := linebot.New(lineChannelSecret, lineAccessToken)
+	if err != nil {
+		log.Print(err)
+	}
+
+	if _, err := bot.PushMessage(targetID, linebot.NewTextMessage(textContents)).Do(); err != nil {
+		log.Print(err)
+	}
+}
