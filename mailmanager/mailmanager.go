@@ -83,26 +83,6 @@ func SendMail(from, to mail.Address, subject, body, smptServerName, smtpAuthUser
 
 }
 
-//EnvelopeEntitiy ...
-type EnvelopeEntitiy struct {
-	// The message date.
-	Date time.Time
-	// The message subject.
-	Subject string
-	// The From header addresses.
-	From []*imap.Address
-	// The message senders.
-	Sender []*imap.Address
-	// The Reply-To header addresses.
-	ReplyTo []*imap.Address
-	// The To header addresses.
-	To []*imap.Address
-	// The Cc header addresses.
-	Cc []*imap.Address
-	// The Bcc header addresses.
-	Bcc []*imap.Address
-}
-
 // FetchMail fetch email using imaps
 func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) []imap.Message {
 	if timeSince.IsZero() && timeBefore.IsZero() {
