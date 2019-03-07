@@ -83,9 +83,28 @@ func SendMail(from, to mail.Address, subject, body, smptServerName, smtpAuthUser
 
 }
 
+//EnvelopeEntitiy ...
+type EnvelopeEntitiy struct {
+	// The message date.
+	Date time.Time
+	// The message subject.
+	Subject string
+	// The From header addresses.
+	From []*imap.Address
+	// The message senders.
+	Sender []*imap.Address
+	// The Reply-To header addresses.
+	ReplyTo []*imap.Address
+	// The To header addresses.
+	To []*imap.Address
+	// The Cc header addresses.
+	Cc []*imap.Address
+	// The Bcc header addresses.
+	Bcc []*imap.Address
+}
+
 // FetchMail fetch email using imaps
-func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) chan *imap.Message {
-	const maxMessages = 5
+func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) []imap.Message {
 	if timeSince.IsZero() && timeBefore.IsZero() {
 		return nil
 	}
@@ -118,7 +137,7 @@ func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAu
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("IDs found:", ids)
+	//log.Println("IDs found:", ids)
 
 	if len(ids) > 0 {
 		seqset := new(imap.SeqSet)
@@ -134,18 +153,18 @@ func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAu
 		}()
 
 		wg.Wait()
-		log.Println("Last", maxMessages, "messages:")
-		var subject []string
+		//log.Println(len(ids), "messages:")
+		var messageEntities []imap.Message
 		for msg := range messages {
-			log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
-			subject = append(subject, msg.Envelope.Subject)
+			//log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+			messageEntities = append(messageEntities, *msg)
 		}
 
 		if err := <-done; err != nil {
 			log.Print(err)
 		}
 
-		return messages
+		return messageEntities
 
 	}
 
