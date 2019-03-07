@@ -19,6 +19,8 @@ func main() {
 	if len(os.Getenv("DOTENV_LOADED")) < 1 {
 		DotEnvLoad()
 	}
+	messages := mailmanager.FetchMail("INBOX", os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	log.Print(messages)
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", handler)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

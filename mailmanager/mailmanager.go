@@ -7,6 +7,11 @@ import (
 	"net"
 	"net/mail"
 	"net/smtp"
+	"sync"
+	"time"
+
+	"github.com/emersion/go-imap"
+	"github.com/emersion/go-imap/client"
 )
 
 // SendMail with SMTPS
@@ -79,6 +84,123 @@ func SendMail(from, to mail.Address, subject, body, smptServerName, smtpAuthUser
 }
 
 // FetchMail fetch email using imaps
-func FetchMail() {
+func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) []imap.Message {
+	if timeSince.IsZero() && timeBefore.IsZero() {
+		return nil
+	}
+
+	c, err := client.DialTLS(imapServerName, nil)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	defer c.Logout()
+
+	if err := c.Login(imapAuthUser, imapAuthPassword); err != nil {
+		log.Panic(err)
+	}
+
+	_, err = c.Select(mboxName, false)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// Set search criteria
+	criteria := imap.NewSearchCriteria()
+	if !timeSince.IsZero() {
+		criteria.Since = timeSince
+	}
+	if !timeBefore.IsZero() {
+		criteria.Before = timeBefore
+	}
+	ids, err := c.Search(criteria)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//log.Println("IDs found:", ids)
+
+	if len(ids) > 0 {
+		seqset := new(imap.SeqSet)
+		seqset.AddNum(ids...)
+
+		messages := make(chan *imap.Message, 10)
+		done := make(chan error, 1)
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+			wg.Done()
+		}()
+
+		wg.Wait()
+		//log.Println(len(ids), "messages:")
+		var messageEntities []imap.Message
+		for msg := range messages {
+			//log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+			messageEntities = append(messageEntities, *msg)
+		}
+
+		if err := <-done; err != nil {
+			log.Print(err)
+		}
+
+		return messageEntities
+
+	}
+
+	return nil
+}
+
+// DeleteMail :delete mails since specified datetime
+func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) {
+	if timeSince.IsZero() && timeBefore.IsZero() {
+		return
+	}
+
+	c, err := client.DialTLS(imapServerName, nil)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	defer c.Logout()
+
+	if err := c.Login(imapAuthUser, imapAuthPassword); err != nil {
+		log.Panic(err)
+	}
+
+	_, err = c.Select(mboxName, false)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// Set search criteria
+	criteria := imap.NewSearchCriteria()
+	if !timeSince.IsZero() {
+		criteria.Since = timeSince
+	}
+	if !timeBefore.IsZero() {
+		criteria.Before = timeBefore
+	}
+	ids, err := c.Search(criteria)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("IDs found:", ids)
+
+	if len(ids) > 0 {
+		seqset := new(imap.SeqSet)
+		seqset.AddNum(ids...)
+
+		//Mark as Deleted
+		item := imap.FormatFlagsOp(imap.AddFlags, true)
+		flags := []interface{}{imap.DeletedFlag}
+		if err := c.Store(seqset, item, flags, nil); err != nil {
+			log.Panic(err)
+		}
+
+		if err := c.Expunge(nil); err != nil {
+			log.Panic(err)
+		}
+	}
 
 }
