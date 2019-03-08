@@ -204,3 +204,34 @@ func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapA
 	}
 
 }
+
+// FilterMessageByRecipientAddress ...
+func FilterMessageByRecipientAddress(messages []imap.Message, targetAddresses []*imap.Address) []imap.Message {
+	slicedMessages := make([]imap.Message, 0, len(messages))
+
+	// OPTIMIZE: Is there any faster search algorithm??
+	for _, msg := range messages {
+		var addresses []string
+		for _, addr := range msg.Envelope.To {
+			addresses = append(addresses, addr.MailboxName+"@"+addr.HostName)
+		}
+		for _, addr := range msg.Envelope.Cc {
+			addresses = append(addresses, addr.MailboxName+"@"+addr.HostName)
+		}
+		for _, addr := range msg.Envelope.Bcc {
+			addresses = append(addresses, addr.MailboxName+"@"+addr.HostName)
+		}
+	FOR_LABEL:
+		for _, address := range addresses {
+			for _, taddr := range targetAddresses {
+				taddress := taddr.MailboxName + "@" + taddr.HostName
+				if address == taddress {
+					slicedMessages = append(slicedMessages, msg)
+					break FOR_LABEL
+				}
+			}
+		}
+	}
+
+	return slicedMessages
+}
