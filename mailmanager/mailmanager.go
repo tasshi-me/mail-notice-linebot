@@ -205,6 +205,88 @@ func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapA
 
 }
 
+// PopMailByUID :fetch and delete mails
+func PopMailByUID(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) []imap.Message {
+	if timeSince.IsZero() && timeBefore.IsZero() {
+		return nil
+	}
+
+	c, err := client.DialTLS(imapServerName, nil)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	defer c.Logout()
+
+	if err := c.Login(imapAuthUser, imapAuthPassword); err != nil {
+		log.Panic(err)
+	}
+
+	_, err = c.Select(mboxName, false)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	// Set search criteria
+	criteria := imap.NewSearchCriteria()
+	if !timeSince.IsZero() {
+		criteria.Since = timeSince
+	}
+	if !timeBefore.IsZero() {
+		criteria.Before = timeBefore
+	}
+	ids, err := c.Search(criteria)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(ids) < 1 {
+		return nil
+	}
+
+	seqset := new(imap.SeqSet)
+	seqset.AddNum(ids...)
+
+	messages := make(chan *imap.Message, 10)
+	done := make(chan error, 1)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	//log.Println(len(ids), "messages:")
+	var messageEntities []imap.Message
+	var deleteIds []uint32
+	for msg := range messages {
+		//log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+		messageEntities = append(messageEntities, *msg)
+		deleteIds = append(deleteIds, msg.Uid)
+	}
+
+	if err := <-done; err != nil {
+		log.Print(err)
+	}
+
+	// Delete fetched mails
+
+	//Mark as Deleted
+	item := imap.FormatFlagsOp(imap.AddFlags, true)
+	flags := []interface{}{imap.DeletedFlag}
+	if err := c.Store(seqset, item, flags, nil); err != nil {
+		log.Panic(err)
+	}
+
+	if err := c.Expunge(nil); err != nil {
+		log.Panic(err)
+	}
+
+	return messageEntities
+
+}
+
 // FilterMessageByRecipientAddress ...
 func FilterMessageByRecipientAddress(messages []imap.Message, targetAddresses []*imap.Address) []imap.Message {
 	slicedMessages := make([]imap.Message, 0, len(messages))

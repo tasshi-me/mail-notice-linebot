@@ -19,13 +19,23 @@ func main() {
 	if len(os.Getenv("DOTENV_LOADED")) < 1 {
 		DotEnvLoad()
 	}
-	messages := mailmanager.FetchMail("INBOX", os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
-	log.Print(messages)
-	port := os.Getenv("PORT")
-	http.HandleFunc("/", handler)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal("ListenAndServe: ", err)
+
+	messages := mailmanager.PopMailByUID(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), "microsoft", os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	for _, msg := range messages {
+		log.Println(msg.Envelope.Date.Sub(time.Now()).String() + ":" + msg.Envelope.Subject)
 	}
+	if len(messages) > 0 {
+		addresses := messages[1].Envelope.To
+		for _, addr := range addresses {
+			log.Println("target:", addr.MailboxName+"@"+addr.HostName)
+		}
+	}
+
+	// port := os.Getenv("PORT")
+	// http.HandleFunc("/", handler)
+	// if err := http.ListenAndServe(":"+port, nil); err != nil {
+	// 	log.Fatal("ListenAndServe: ", err)
+	// }
 }
 
 // DotEnvLoad load .env file
@@ -118,10 +128,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		default:
 			// Do Nothing
 		}
-
-		// if _, err := bot.PushMessage(targetID, linebot.NewTextMessage("hello")).Do(); err != nil {
-
-		// }
 	}
 }
 
