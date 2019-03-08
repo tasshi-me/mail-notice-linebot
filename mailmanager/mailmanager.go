@@ -205,8 +205,8 @@ func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapA
 
 }
 
-// PopMailByUID :fetch and delete mails
-func PopMailByUID(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) []imap.Message {
+// PopMail :fetch and delete mails
+func PopMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuthUser, imapAuthPassword string) []imap.Message {
 	if timeSince.IsZero() && timeBefore.IsZero() {
 		return nil
 	}

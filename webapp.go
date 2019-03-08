@@ -20,22 +20,14 @@ func main() {
 		DotEnvLoad()
 	}
 
-	messages := mailmanager.PopMailByUID(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), "microsoft", os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
-	for _, msg := range messages {
-		log.Println(msg.Envelope.Date.Sub(time.Now()).String() + ":" + msg.Envelope.Subject)
-	}
-	if len(messages) > 0 {
-		addresses := messages[1].Envelope.To
-		for _, addr := range addresses {
-			log.Println("target:", addr.MailboxName+"@"+addr.HostName)
-		}
-	}
+	//mailCheck()
+	//sendVerificationMail("Test User", os.Getenv("IMAP_AUTH_USER"), time.Now().String())
 
-	// port := os.Getenv("PORT")
-	// http.HandleFunc("/", handler)
-	// if err := http.ListenAndServe(":"+port, nil); err != nil {
-	// 	log.Fatal("ListenAndServe: ", err)
-	// }
+	port := os.Getenv("PORT")
+	http.HandleFunc("/", handler)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
 
 // DotEnvLoad load .env file
@@ -43,6 +35,22 @@ func DotEnvLoad() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("DotEnv:", err)
+	}
+}
+
+func mailCheck() {
+	mboxName := "inbox"
+	//messages := mailmanager.PopMailByUID(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	messages := mailmanager.PopMail(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	log.Println("fetched messages: ", len(messages))
+	for _, msg := range messages {
+		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+	}
+	if len(messages) > 0 {
+		// addresses := createNotificationMap()
+		// for _, addr := range addresses {
+		// 	log.Println("target:", addr.MailboxName+"@"+addr.HostName)
+		// }
 	}
 }
 
@@ -259,4 +267,8 @@ func sendPushNotification(targetID, textContents string) {
 	if _, err := bot.PushMessage(targetID, linebot.NewTextMessage(textContents)).Do(); err != nil {
 		log.Print(err)
 	}
+}
+
+func assignMessagesToByAddess() {
+
 }
