@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"net/mail"
 	"os"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/emersion/go-imap"
 
 	"./mailmanager"
 
@@ -15,12 +18,36 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
+// LineUser ...
+type LineUser struct {
+	LineID              string
+	LineName            string
+	RegisteredAddresses []string
+}
+
+// MailObject ..
+type MailObject struct {
+	TargetLineID        string
+	MailFromName        string
+	MailFromAddress     string
+	MailReceivedAddress string
+	MailSubject         string
+}
+
+// UserMailObject ..
+type UserMailObject struct {
+	TargetLineID string
+	MailObjects  []MailObject
+}
+
 func main() {
 	if len(os.Getenv("DOTENV_LOADED")) < 1 {
 		DotEnvLoad()
 	}
-	messages := mailmanager.FetchMail("INBOX", os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
-	log.Print(messages)
+
+	//mailCheck()
+	//sendVerificationMail("Test User", os.Getenv("IMAP_AUTH_USER"), time.Now().String())
+
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", handler)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
@@ -33,6 +60,26 @@ func DotEnvLoad() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("DotEnv:", err)
+	}
+}
+
+func mailCheck() {
+	mboxName := "inbox"
+	//messages := mailmanager.PopMailByUID(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	messages := mailmanager.PopMail(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	log.Println("fetched messages: ", len(messages))
+	for _, msg := range messages {
+		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+	}
+	if len(messages) > 0 {
+		lineUsers := []LineUser{}
+
+		userMailObjects := ConvertMessagesToUserMailObject(messages, lineUsers)
+		log.Println(userMailObjects)
+
+		if len(userMailObjects) > 0 {
+			sendPushNotification(userMailObjects)
+		}
 	}
 }
 
@@ -118,10 +165,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		default:
 			// Do Nothing
 		}
-
-		// if _, err := bot.PushMessage(targetID, linebot.NewTextMessage("hello")).Do(); err != nil {
-
-		// }
 	}
 }
 
@@ -238,4 +281,85 @@ func sendVerificationMail(userName, userAddress, verificationKey string) {
 	smtpAuthUser := os.Getenv("SMTP_AUTH_USER")
 	smtpAuthPassword := os.Getenv("SMTP_AUTH_PASSWORD")
 	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
+}
+
+func sendPushNotification(userMailObjects []UserMailObject) {
+	//lineChannelID := os.Getenv("LINE_CHANNEL_ID")
+	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
+	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
+
+	bot, err := linebot.New(lineChannelSecret, lineAccessToken)
+	if err != nil {
+		log.Print(err)
+	}
+
+	for _, userMailObject := range userMailObjects {
+		var textContents string
+		textContents = "新着メールが" + strconv.Itoa(len(userMailObject.MailObjects)) + "件あります\n"
+		for i, mailObject := range userMailObject.MailObjects {
+			if len(userMailObject.MailObjects) > 1 {
+				textContents += strconv.Itoa(i+1) + ".\n"
+			}
+			if len(mailObject.MailFromName) > 0 {
+				textContents += "差出人: " + mailObject.MailFromName + "\n"
+			} else {
+				textContents += "差出人: " + mailObject.MailFromAddress + "\n"
+			}
+			//textContents += "宛先: " + mailObject.MailReceivedAddress + "\n"
+			textContents += "件名: " + mailObject.MailSubject + "\n"
+		}
+		if _, err := bot.PushMessage(userMailObject.TargetLineID, linebot.NewTextMessage(textContents)).Do(); err != nil {
+			log.Print(err)
+		}
+	}
+
+}
+
+// ConvertMessagesToUserMailObject ..
+func ConvertMessagesToUserMailObject(messages []imap.Message, lineUsers []LineUser) []UserMailObject {
+	var userMailObjects []UserMailObject
+	for _, lineUser := range lineUsers {
+		var mailObjects []MailObject
+	MSG_LOOP:
+		for _, msg := range messages {
+			var addresses []*imap.Address
+			for _, addr := range msg.Envelope.To {
+				addresses = append(addresses, addr)
+			}
+			for _, addr := range msg.Envelope.Cc {
+				addresses = append(addresses, addr)
+			}
+			for _, addr := range msg.Envelope.Bcc {
+				addresses = append(addresses, addr)
+			}
+
+			for _, registeredAddress := range lineUser.RegisteredAddresses {
+				for _, address := range addresses {
+					fullAddress := address.MailboxName + "@" + address.HostName
+					if registeredAddress == fullAddress {
+						mailFromAddress := msg.Envelope.From[0]
+						mailObject := MailObject{
+							TargetLineID:        lineUser.LineID,
+							MailFromName:        mailFromAddress.MailboxName + "@" + mailFromAddress.HostName,
+							MailFromAddress:     mailFromAddress.PersonalName,
+							MailReceivedAddress: fullAddress,
+							MailSubject:         msg.Envelope.Subject,
+						}
+						mailObjects = append(mailObjects, mailObject)
+						log.Println(mailObject)
+						continue MSG_LOOP
+					}
+				}
+			}
+		}
+		if len(mailObjects) > 0 {
+			userMailObject := UserMailObject{
+				TargetLineID: lineUser.LineID,
+				MailObjects:  mailObjects,
+			}
+			userMailObjects = append(userMailObjects, userMailObject)
+		}
+	}
+
+	return userMailObjects
 }

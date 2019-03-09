@@ -9,6 +9,8 @@ RUN mkdir  %USERPROFILE%\go\src\postgresqlgo
 RUN cd %USERPROFILE%\go\src\postgresqlgo
 RUN set GOPATH=%USERPROFILE%\go
 RUN go get github.com/line/line-bot-sdk-go/linebot
+RUN go get github.com/emersion/go-imap/client
+RUN go get github.com/joho/godotenv
 
 WORKDIR /go
 ADD . /go
