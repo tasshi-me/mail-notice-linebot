@@ -9,11 +9,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/emersion/go-imap"
+
 	"./mailmanager"
 
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
+
+// LineUser ...
+type LineUser struct {
+	LineID            string
+	LineName          string
+	RegisteredAddress []string
+}
+
+// MailObject ..
+type MailObject struct {
+	TargetLineID string
+	MailSubject  []string
+}
 
 func main() {
 	if len(os.Getenv("DOTENV_LOADED")) < 1 {
@@ -47,10 +62,12 @@ func mailCheck() {
 		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
 	}
 	if len(messages) > 0 {
-		// addresses := createNotificationMap()
-		// for _, addr := range addresses {
-		// 	log.Println("target:", addr.MailboxName+"@"+addr.HostName)
-		// }
+		lineUser := []LineUser{}
+
+		mailObjects := ConvertMessagesToMailObjectByLineUser(messages, lineUser)
+		log.Println(mailObjects)
+
+		//sendPushNotification(targetUserId, Mail)
 	}
 }
 
@@ -269,6 +286,15 @@ func sendPushNotification(targetID, textContents string) {
 	}
 }
 
-func assignMessagesToByAddess() {
+// ConvertMessagesToMailObjectByLineUser ..
+func ConvertMessagesToMailObjectByLineUser(messages []imap.Message, lineUsers []LineUser) []MailObject {
+	var mailObjects []MailObject
+	for _, msg := range messages {
+		for _, lineUser := range lineUsers {
+			log.Println(lineUser, msg)
 
+		}
+	}
+
+	return mailObjects
 }
