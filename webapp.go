@@ -72,9 +72,9 @@ func mailCheck() {
 		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
 	}
 	if len(messages) > 0 {
-		lineUser := []LineUser{}
+		lineUsers := []LineUser{}
 
-		userMailObjects := ConvertMessagesToUserMailObject(messages, lineUser)
+		userMailObjects := ConvertMessagesToUserMailObject(messages, lineUsers)
 		log.Println(userMailObjects)
 
 		if len(userMailObjects) > 0 {
@@ -296,8 +296,17 @@ func sendPushNotification(userMailObjects []UserMailObject) {
 	for _, userMailObject := range userMailObjects {
 		var textContents string
 		textContents = "新着メールが" + strconv.Itoa(len(userMailObject.MailObjects)) + "件あります\n"
-		for _, mailObject := range userMailObject.MailObjects {
-			textContents += mailObject.MailFromName + "からのメッセージ: " + mailObject.MailSubject + "\n"
+		for i, mailObject := range userMailObject.MailObjects {
+			if len(userMailObject.MailObjects) > 1 {
+				textContents += strconv.Itoa(i+1) + ".\n"
+			}
+			if len(mailObject.MailFromName) > 0 {
+				textContents += "差出人: " + mailObject.MailFromName + "\n"
+			} else {
+				textContents += "差出人: " + mailObject.MailFromAddress + "\n"
+			}
+			//textContents += "宛先: " + mailObject.MailReceivedAddress + "\n"
+			textContents += "件名: " + mailObject.MailSubject + "\n"
 		}
 		if _, err := bot.PushMessage(userMailObject.TargetLineID, linebot.NewTextMessage(textContents)).Do(); err != nil {
 			log.Print(err)
