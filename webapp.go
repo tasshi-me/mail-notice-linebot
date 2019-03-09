@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/mail"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,15 +20,24 @@ import (
 
 // LineUser ...
 type LineUser struct {
-	LineID            string
-	LineName          string
-	RegisteredAddress []string
+	LineID              string
+	LineName            string
+	RegisteredAddresses []string
 }
 
 // MailObject ..
 type MailObject struct {
+	TargetLineID        string
+	MailFromName        string
+	MailFromAddress     string
+	MailReceivedAddress string
+	MailSubject         string
+}
+
+// UserMailObject ..
+type UserMailObject struct {
 	TargetLineID string
-	MailSubject  []string
+	MailObjects  []MailObject
 }
 
 func main() {
@@ -64,10 +74,12 @@ func mailCheck() {
 	if len(messages) > 0 {
 		lineUser := []LineUser{}
 
-		mailObjects := ConvertMessagesToMailObjectByLineUser(messages, lineUser)
-		log.Println(mailObjects)
+		userMailObjects := ConvertMessagesToUserMailObject(messages, lineUser)
+		log.Println(userMailObjects)
 
-		//sendPushNotification(targetUserId, Mail)
+		if len(userMailObjects) > 0 {
+			sendPushNotification(userMailObjects)
+		}
 	}
 }
 
@@ -271,7 +283,7 @@ func sendVerificationMail(userName, userAddress, verificationKey string) {
 	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }
 
-func sendPushNotification(targetID, textContents string) {
+func sendPushNotification(userMailObjects []UserMailObject) {
 	//lineChannelID := os.Getenv("LINE_CHANNEL_ID")
 	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
 	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
@@ -281,20 +293,64 @@ func sendPushNotification(targetID, textContents string) {
 		log.Print(err)
 	}
 
-	if _, err := bot.PushMessage(targetID, linebot.NewTextMessage(textContents)).Do(); err != nil {
-		log.Print(err)
-	}
-}
-
-// ConvertMessagesToMailObjectByLineUser ..
-func ConvertMessagesToMailObjectByLineUser(messages []imap.Message, lineUsers []LineUser) []MailObject {
-	var mailObjects []MailObject
-	for _, msg := range messages {
-		for _, lineUser := range lineUsers {
-			log.Println(lineUser, msg)
-
+	for _, userMailObject := range userMailObjects {
+		var textContents string
+		textContents = "新着メールが" + strconv.Itoa(len(userMailObject.MailObjects)) + "件あります\n"
+		for _, mailObject := range userMailObject.MailObjects {
+			textContents += mailObject.MailFromName + "からのメッセージ: " + mailObject.MailSubject + "\n"
+		}
+		if _, err := bot.PushMessage(userMailObject.TargetLineID, linebot.NewTextMessage(textContents)).Do(); err != nil {
+			log.Print(err)
 		}
 	}
 
-	return mailObjects
+}
+
+// ConvertMessagesToUserMailObject ..
+func ConvertMessagesToUserMailObject(messages []imap.Message, lineUsers []LineUser) []UserMailObject {
+	var userMailObjects []UserMailObject
+	for _, lineUser := range lineUsers {
+		var mailObjects []MailObject
+	MSG_LOOP:
+		for _, msg := range messages {
+			var addresses []*imap.Address
+			for _, addr := range msg.Envelope.To {
+				addresses = append(addresses, addr)
+			}
+			for _, addr := range msg.Envelope.Cc {
+				addresses = append(addresses, addr)
+			}
+			for _, addr := range msg.Envelope.Bcc {
+				addresses = append(addresses, addr)
+			}
+
+			for _, registeredAddress := range lineUser.RegisteredAddresses {
+				for _, address := range addresses {
+					fullAddress := address.MailboxName + "@" + address.HostName
+					if registeredAddress == fullAddress {
+						mailFromAddress := msg.Envelope.From[0]
+						mailObject := MailObject{
+							TargetLineID:        lineUser.LineID,
+							MailFromName:        mailFromAddress.MailboxName + "@" + mailFromAddress.HostName,
+							MailFromAddress:     mailFromAddress.PersonalName,
+							MailReceivedAddress: fullAddress,
+							MailSubject:         msg.Envelope.Subject,
+						}
+						mailObjects = append(mailObjects, mailObject)
+						log.Println(mailObject)
+						continue MSG_LOOP
+					}
+				}
+			}
+		}
+		if len(mailObjects) > 0 {
+			userMailObject := UserMailObject{
+				TargetLineID: lineUser.LineID,
+				MailObjects:  mailObjects,
+			}
+			userMailObjects = append(userMailObjects, userMailObject)
+		}
+	}
+
+	return userMailObjects
 }
