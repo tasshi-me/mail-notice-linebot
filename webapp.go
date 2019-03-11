@@ -13,6 +13,7 @@ import (
 	"github.com/emersion/go-imap"
 
 	"./mailmanager"
+	"./mongodb"
 
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
