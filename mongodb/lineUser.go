@@ -47,9 +47,17 @@ func CreateOrUpdateLineUser(lineUser LineUser, url string) {
 	db := session.DB("")
 	col := db.C("LineUser")
 
-	// Insert LineUser
-	if err := col.Insert(&lineUser); err != nil {
-		log.Println(err)
+	lu := ReadLineUser(lineUser.LineID, url)
+	if len(lu.LineID) > 0 {
+		// Update LineUser
+		if err := col.Update(bson.M{"line_id": lineUser.LineID}, &lineUser); err != nil {
+			log.Println(err)
+		}
+	} else {
+		// Insert LineUser
+		if err := col.Insert(&lineUser); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
