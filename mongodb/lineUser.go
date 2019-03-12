@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"log"
-	"os"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -38,19 +37,19 @@ func CreateIndexForLineUser(url string) {
 }
 
 // CreateOrUpdateLineUser ..
-func CreateOrUpdateLineUser(lineUser LineUser) {
-	session, err := mgo.Dial(os.Getenv("MONGODB_URI"))
+func CreateOrUpdateLineUser(lineUser LineUser, url string) {
+	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
 	}
 	defer session.Close()
 
 	db := session.DB("")
+	col := db.C("LineUser")
 
 	// Insert LineUser
-	col := db.C("LineUser")
 	if err := col.Insert(&lineUser); err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 }
 
