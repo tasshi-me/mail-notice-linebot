@@ -21,6 +21,13 @@ func main() {
 	url := os.Getenv("MONGODB_URI")
 	mongodb.CreateIndexForLineUser(url)
 
+	herokuAppName := os.Getenv("HEROKU_APP_NAME")
+	if len(herokuAppName) > 0 {
+		appURL := "https://" + herokuAppName + ".herokuapp.com/"
+		log.Println("url: ", appURL)
+		go workers.KeepAliveWorker(appURL)
+	}
+
 	// Start MailCheckWorker
 	go workers.MailCheckWorker()
 
