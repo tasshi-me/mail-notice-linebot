@@ -41,14 +41,13 @@ func mailCheck() {
 	//messages := mailmanager.PopMailByUID(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
 	messages := mailmanager.PopMail(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
 	log.Println("fetched messages: ", len(messages))
-	for _, msg := range messages {
-		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
-	}
+	// for _, msg := range messages {
+	// 	log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
+	// }
 	if len(messages) > 0 {
 		lineUsers := mongodb.ReadAllLineUsers(os.Getenv("MONGODB_URI"))
 
 		userMailObjects := mailmanager.ConvertMessagesToUserMailObject(messages, lineUsers)
-		log.Println(userMailObjects)
 
 		if len(userMailObjects) > 0 {
 			lineapi.SendPushNotification(userMailObjects)
