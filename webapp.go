@@ -13,17 +13,11 @@ import (
 	"github.com/emersion/go-imap"
 
 	"./mailmanager"
+	"./mongodb"
 
 	"github.com/joho/godotenv"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
-
-// LineUser ...
-type LineUser struct {
-	LineID              string
-	LineName            string
-	RegisteredAddresses []string
-}
 
 // MailObject ..
 type MailObject struct {
@@ -316,7 +310,7 @@ func sendPushNotification(userMailObjects []UserMailObject) {
 }
 
 // ConvertMessagesToUserMailObject ..
-func ConvertMessagesToUserMailObject(messages []imap.Message, lineUsers []LineUser) []UserMailObject {
+func ConvertMessagesToUserMailObject(messages []imap.Message, lineUsers []mongodb.LineUser) []UserMailObject {
 	var userMailObjects []UserMailObject
 	for _, lineUser := range lineUsers {
 		var mailObjects []MailObject

@@ -11,6 +11,7 @@ RUN set GOPATH=%USERPROFILE%\go
 RUN go get github.com/line/line-bot-sdk-go/linebot
 RUN go get github.com/emersion/go-imap/client
 RUN go get github.com/joho/godotenv
+RUN go get github.com/globalsign/mgo
 
 WORKDIR /go
 ADD . /go
