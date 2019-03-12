@@ -71,3 +71,22 @@ func ReadAllLineUsers(url string) []LineUser {
 
 	return lineUser
 }
+
+// ReadLineUser ..
+func ReadLineUser(lineID string, url string) LineUser {
+	session, err := mgo.Dial(url)
+	if err != nil {
+		log.Fatal("mgo.Dial: ", err)
+	}
+	defer session.Close()
+
+	db := session.DB("")
+	col := db.C("LineUser")
+
+	// Find LineUser by LineUser.LineID
+	lineUser := LineUser{}
+	query := col.Find(bson.M{"line_id": lineID})
+	query.One(&lineUser)
+
+	return lineUser
+}
