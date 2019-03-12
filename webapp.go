@@ -45,7 +45,7 @@ func mailCheck() {
 		log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
 	}
 	if len(messages) > 0 {
-		lineUsers := []LineUser{}
+		lineUsers := mongodb.ReadAllLineUsers(os.Getenv("MONGODB_URI"))
 
 		userMailObjects := mailmanager.ConvertMessagesToUserMailObject(messages, lineUsers)
 		log.Println(userMailObjects)
