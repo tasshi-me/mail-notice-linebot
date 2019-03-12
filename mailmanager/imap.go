@@ -2,7 +2,6 @@ package mailmanager
 
 import (
 	"log"
-	"sync"
 	"time"
 
 	"github.com/emersion/go-imap"
@@ -171,14 +170,10 @@ func PopMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAuth
 
 	messages := make(chan *imap.Message, 10)
 	done := make(chan error, 1)
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
 	go func() {
 		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
-		wg.Done()
 	}()
 
-	wg.Wait()
 	//log.Println(len(ids), "messages:")
 	var messageEntities []imap.Message
 	var deleteIds []uint32
