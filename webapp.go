@@ -24,7 +24,7 @@ func main() {
 	go workers.MailCheckWorker()
 
 	port := os.Getenv("PORT")
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", lineapi.WebhookHandler)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
