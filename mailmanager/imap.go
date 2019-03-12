@@ -51,14 +51,10 @@ func FetchMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapAu
 
 		messages := make(chan *imap.Message, 10)
 		done := make(chan error, 1)
-		wg := &sync.WaitGroup{}
-		wg.Add(1)
 		go func() {
 			done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
-			wg.Done()
 		}()
 
-		wg.Wait()
 		//log.Println(len(ids), "messages:")
 		var messageEntities []imap.Message
 		for msg := range messages {
