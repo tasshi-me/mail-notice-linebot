@@ -20,6 +20,8 @@ func main() {
 
 	//mailCheck()
 	//sendVerificationMail("Test User", os.Getenv("IMAP_AUTH_USER"), time.Now().String())
+	// Start MailCheckWorker
+	go workers.MailCheckWorker()
 
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", handler)

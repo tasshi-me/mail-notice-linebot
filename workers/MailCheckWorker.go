@@ -32,3 +32,15 @@ func MailCheck() {
 		}
 	}
 }
+
+// MailCheckWorker ..
+func MailCheckWorker() {
+	interval := 5 * time.Minute
+	tic := time.NewTicker(interval)
+	for {
+		select {
+		case <-tic.C:
+			MailCheck()
+		}
+	}
+}
