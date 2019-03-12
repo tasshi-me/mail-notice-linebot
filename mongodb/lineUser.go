@@ -55,19 +55,20 @@ func CreateOrUpdateLineUser(lineUser LineUser) {
 }
 
 // ReadAllLineUsers ..
-func ReadAllLineUsers() []LineUser {
-	session, err := mgo.Dial(os.Getenv("MONGODB_URI"))
+func ReadAllLineUsers(url string) []LineUser {
+	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
 	}
 	defer session.Close()
 
 	db := session.DB("")
+	col := db.C("LineUser")
 
 	// Read All LineUsers
-	p := []LineUser{}
-	query := db.C("LineUser").Find(bson.M{})
-	query.All(&p)
+	lineUser := []LineUser{}
+	query := col.Find(bson.M{})
+	query.All(&lineUser)
 
-	return p
+	return lineUser
 }
