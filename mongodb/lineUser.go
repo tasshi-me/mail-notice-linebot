@@ -15,6 +15,28 @@ type LineUser struct {
 	RegisteredAddresses []string `bson:"registered_address"`
 }
 
+// CreateIndexForLineUser ..
+func CreateIndexForLineUser(url string) {
+	session, err := mgo.Dial(url)
+	if err != nil {
+		log.Fatal("mgo.Dial: ", err)
+	}
+	defer session.Close()
+
+	db := session.DB("")
+	col := db.C("LineUser")
+
+	//Create Index
+	index := mgo.Index{
+		Key:    []string{"line_id"},
+		Unique: true,
+	}
+	err = col.EnsureIndex(index)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 // CreateOrUpdateLineUser ..
 func CreateOrUpdateLineUser(lineUser LineUser) {
 	session, err := mgo.Dial(os.Getenv("MONGODB_URI"))
