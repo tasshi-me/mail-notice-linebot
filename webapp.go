@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"./lineapi"
 	"./mongodb"
@@ -18,11 +17,14 @@ func main() {
 		DotEnvLoad()
 	}
 
-	//mailCheck()
-	//sendVerificationMail("Test User", os.Getenv("IMAP_AUTH_USER"), time.Now().String())
+	// Init DB
+	url := os.Getenv("MONGODB_URI")
+	mongodb.CreateIndexForLineUser(url)
+
 	// Start MailCheckWorker
 	go workers.MailCheckWorker()
 
+	// Start http server for linebot webhook
 	port := os.Getenv("PORT")
 	http.HandleFunc("/", lineapi.WebhookHandler)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
