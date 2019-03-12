@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	if len(os.Getenv("DOTENV_LOADED")) < 1 {
+	if len(os.Getenv("ENV_LOADED")) < 1 {
 		DotEnvLoad()
 	}
 
