@@ -89,6 +89,24 @@ func ReadLineUser(lineID string, url string) LineUser {
 
 	return lineUser
 }
+
+// DeleteAllLineUsers ..
+func DeleteAllLineUsers(url string) {
+	session, err := mgo.Dial(url)
+	if err != nil {
+		log.Fatal("mgo.Dial: ", err)
+	}
+	defer session.Close()
+
+	db := session.DB("")
+	col := db.C("LineUser")
+
+	// Remove All LineUsers
+	if _, err := col.RemoveAll(bson.M{}); err != nil {
+		log.Println(err)
+	}
+}
+
 // DeleteLineUser ..
 func DeleteLineUser(lineID string, url string) {
 	session, err := mgo.Dial(url)
