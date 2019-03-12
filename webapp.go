@@ -37,9 +37,12 @@ func DotEnvLoad() {
 }
 
 func mailCheck() {
-	mboxName := "inbox"
-	//messages := mailmanager.PopMailByUID(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
-	messages := mailmanager.PopMail(time.Now().AddDate(0, 0, -1), time.Now().AddDate(0, 0, 1), mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	mboxName := os.Getenv("IMAP_MBOX_NAME")
+	dateSince := time.Now().AddDate(0, 0, -1)
+	dateBefore := time.Now().AddDate(0, 0, 1)
+
+	messages := mailmanager.FetchMail(dateSince, dateBefore, mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	//messages := mailmanager.PopMail(dateSince, dateBefore, mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
 	log.Println("fetched messages: ", len(messages))
 	// for _, msg := range messages {
 	// 	log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
