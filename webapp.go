@@ -3,27 +3,26 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 	"time"
 
+	"./helper"
 	"./lineapi"
 	"./mongodb"
 	"./workers"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	if len(os.Getenv("ENV_LOADED")) < 1 {
-		DotEnvLoad()
+	configVars := helper.ConfigVars()
+	if len(configVars.EnvLoaded) < 1 {
+		helper.DotEnvLoad()
 	}
 
 	// Init DB
-	mongodbURL := os.Getenv("MONGODB_URI")
+	mongodbURL := configVars.MongodbURI
 	mongodb.CreateIndexForLineUser(mongodbURL)
 
 	// Start Keep-Alive Worker for Heroku
-	herokuAppName := os.Getenv("HEROKU_APP_NAME")
+	herokuAppName := configVars.HerokuAppName
 	if len(herokuAppName) > 0 {
 		interval := 20 * time.Minute
 		appURL := "https://" + herokuAppName + ".herokuapp.com/"
@@ -35,17 +34,9 @@ func main() {
 	go workers.MailCheckWorker(interval)
 
 	// Start http server for linebot webhook
-	port := os.Getenv("PORT")
+	port := configVars.Port
 	http.HandleFunc("/", lineapi.WebhookHandler)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatal("ListenAndServe: ", err)
-	}
-}
-
-// DotEnvLoad load .env file
-func DotEnvLoad() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("DotEnv:", err)
 	}
 }

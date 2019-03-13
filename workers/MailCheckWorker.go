@@ -2,9 +2,9 @@ package workers
 
 import (
 	"log"
-	"os"
 	"time"
 
+	"../helper"
 	"../lineapi"
 	"../mailmanager"
 	"../mongodb"
@@ -12,18 +12,19 @@ import (
 
 // MailCheck ..
 func MailCheck() {
-	mboxName := os.Getenv("IMAP_MBOX_NAME")
+	configVars := helper.ConfigVars()
+	mboxName := configVars.IMAP.MboxName
 	dateSince := time.Now().AddDate(0, 0, -1)
 	dateBefore := time.Now().AddDate(0, 0, 1)
 
-	messages := mailmanager.FetchMail(dateSince, dateBefore, mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
-	//messages := mailmanager.PopMail(dateSince, dateBefore, mboxName, os.Getenv("IMAP_SERVER_NAME"), os.Getenv("IMAP_AUTH_USER"), os.Getenv("IMAP_AUTH_PASSWORD"))
+	messages := mailmanager.FetchMail(dateSince, dateBefore, mboxName, configVars.IMAP.ServerName, configVars.IMAP.AuthUser, configVars.IMAP.AuthPassword)
+	//messages := mailmanager.PopMail(dateSince, dateBefore, mboxName, configVars.IMAP.ServerName, configVars.IMAP.AuthUser, configVars.IMAP.AuthPassword)
 	log.Println("fetched messages: ", len(messages))
 	// for _, msg := range messages {
 	// 	log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)
 	// }
 	if len(messages) > 0 {
-		lineUsers := mongodb.ReadAllLineUsers(os.Getenv("MONGODB_URI"))
+		lineUsers := mongodb.ReadAllLineUsers(configVars.MongodbURI)
 
 		userMailObjects := mailmanager.ConvertMessagesToUserMailObject(messages, lineUsers)
 

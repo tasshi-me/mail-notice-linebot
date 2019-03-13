@@ -106,7 +106,7 @@ func DeleteMail(timeSince, timeBefore time.Time, mboxName, imapServerName, imapA
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("IDs found:", ids)
+	//log.Println("IDs found:", ids)
 
 	if len(ids) > 0 {
 		seqset := new(imap.SeqSet)

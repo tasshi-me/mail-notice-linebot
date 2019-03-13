@@ -2,18 +2,20 @@ package lineapi
 
 import (
 	"log"
-	"os"
 	"strconv"
 
+	"../helper"
 	"../mailmanager"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 // SendPushNotification ..
 func SendPushNotification(userMailObjects []mailmanager.UserMailObject) {
-	//lineChannelID := os.Getenv("LINE_CHANNEL_ID")
-	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
-	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
+	configVars := helper.ConfigVars()
+
+	//lineChannelID := configVars.LineAPI.ChannelID
+	lineChannelSecret := configVars.LineAPI.ChannelSecret
+	lineAccessToken := configVars.LineAPI.AccessToken
 
 	bot, err := linebot.New(lineChannelSecret, lineAccessToken)
 	if err != nil {

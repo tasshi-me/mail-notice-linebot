@@ -1,8 +1,6 @@
 package mailmanager
 
 import (
-	"log"
-
 	"../mongodb"
 
 	"github.com/emersion/go-imap"
@@ -54,7 +52,7 @@ func ConvertMessagesToUserMailObject(messages []imap.Message, lineUsers []mongod
 							MailSubject:         msg.Envelope.Subject,
 						}
 						mailObjects = append(mailObjects, mailObject)
-						log.Println(mailObject)
+						//log.Println(mailObject)
 						continue MSG_LOOP
 					}
 				}
