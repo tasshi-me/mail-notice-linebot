@@ -7,8 +7,7 @@ import (
 )
 
 // KeepAliveWorker ..
-func KeepAliveWorker(url string) {
-	interval := 20 * time.Minute
+func KeepAliveWorker(interval time.Duration, url string) {
 	tic := time.NewTicker(interval)
 	for {
 		select {

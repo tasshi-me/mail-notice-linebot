@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"./lineapi"
 	"./mongodb"
@@ -24,12 +25,14 @@ func main() {
 	// Start Keep-Alive Worker for Heroku
 	herokuAppName := os.Getenv("HEROKU_APP_NAME")
 	if len(herokuAppName) > 0 {
+		interval := 20 * time.Minute
 		appURL := "https://" + herokuAppName + ".herokuapp.com/"
-		go workers.KeepAliveWorker(appURL)
+		go workers.KeepAliveWorker(interval, appURL)
 	}
 
 	// Start MailCheckWorker
-	go workers.MailCheckWorker()
+	interval := 5 * time.Minute
+	go workers.MailCheckWorker(interval)
 
 	// Start http server for linebot webhook
 	port := os.Getenv("PORT")
