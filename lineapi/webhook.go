@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
-	"os"
 	"strings"
 
+	"../helper"
 	"../mailmanager"
 
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -14,10 +14,11 @@ import (
 
 // WebhookHandler ..
 func WebhookHandler(w http.ResponseWriter, r *http.Request) {
+	configVars := helper.ConfigVars()
 
-	//lineChannelID := os.Getenv("LINE_CHANNEL_ID")
-	lineChannelSecret := os.Getenv("LINE_CHANNEL_SECRET")
-	lineAccessToken := os.Getenv("LINE_ACCESS_TOKEN")
+	//lineChannelID := configVars.LineAPI.ChannelID
+	lineChannelSecret := configVars.LineAPI.ChannelSecret
+	lineAccessToken := configVars.LineAPI.AccessToken
 
 	bot, err := linebot.New(lineChannelSecret, lineAccessToken)
 
@@ -100,12 +101,13 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 
 // SendVerificationMail ..
 func SendVerificationMail(userName, userAddress, verificationKey string) {
-	from := mail.Address{Name: os.Getenv("SENDER_USERNAME"), Address: os.Getenv("SENDER_ADDRESS")}
+	configVars := helper.ConfigVars()
+	from := mail.Address{Name: configVars.SMTP.SenderUsername, Address: configVars.SMTP.SenderAddress}
 	to := mail.Address{Name: userName, Address: userAddress}
 	subject := "LINEBOT: メールお知らせくん登録確認"
 	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：" + verificationKey
-	smptServerName := os.Getenv("SMTP_SERVER_NAME")
-	smtpAuthUser := os.Getenv("SMTP_AUTH_USER")
-	smtpAuthPassword := os.Getenv("SMTP_AUTH_PASSWORD")
+	smptServerName := configVars.SMTP.ServerName
+	smtpAuthUser := configVars.SMTP.AuthUser
+	smtpAuthPassword := configVars.SMTP.AuthPassword
 	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }
