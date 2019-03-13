@@ -18,13 +18,13 @@ func main() {
 	}
 
 	// Init DB
-	url := os.Getenv("MONGODB_URI")
-	mongodb.CreateIndexForLineUser(url)
+	mongodbURL := os.Getenv("MONGODB_URI")
+	mongodb.CreateIndexForLineUser(mongodbURL)
 
+	// Start Keep-Alive Worker for Heroku
 	herokuAppName := os.Getenv("HEROKU_APP_NAME")
 	if len(herokuAppName) > 0 {
 		appURL := "https://" + herokuAppName + ".herokuapp.com/"
-		log.Println("url: ", appURL)
 		go workers.KeepAliveWorker(appURL)
 	}
 

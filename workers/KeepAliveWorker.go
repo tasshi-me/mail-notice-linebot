@@ -1,15 +1,21 @@
 package workers
 
-import "time"
+import (
+	"log"
+	"net/http"
+	"time"
+)
 
 // KeepAliveWorker ..
 func KeepAliveWorker(url string) {
-	interval := 10 * time.Minute
+	interval := 20 * time.Minute
 	tic := time.NewTicker(interval)
 	for {
 		select {
 		case <-tic.C:
-			//TODO: Curl itself
+			res, _ := http.Get(url)
+			defer res.Body.Close()
+			log.Println("Keep-Alive: ", url)
 		}
 	}
 }
