@@ -23,7 +23,7 @@ func CreateIndexForConfiguringUser(url string) {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("LineUser")
+	col := db.C("ConfiguringUser")
 
 	//Create Index
 	index := mgo.Index{
@@ -37,7 +37,7 @@ func CreateIndexForConfiguringUser(url string) {
 }
 
 // CreateOrUpdateConfiguringUser ..
-func CreateOrUpdateConfiguringUser(lineUser ConfiguringUser, url string) {
+func CreateOrUpdateConfiguringUser(configuringUser ConfiguringUser, url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -45,9 +45,9 @@ func CreateOrUpdateConfiguringUser(lineUser ConfiguringUser, url string) {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("LineUser")
+	col := db.C("ConfiguringUser")
 
-	if _, err := col.Upsert(bson.M{"line_id": lineUser.LineID}, &lineUser); err != nil {
+	if _, err := col.Upsert(bson.M{"line_id": configuringUser.LineID}, &configuringUser); err != nil {
 		log.Println(err)
 	}
 }
@@ -61,7 +61,7 @@ func ReadAllConfiguringUsers(url string) []ConfiguringUser {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("LineUser")
+	col := db.C("ConfiguringUser")
 
 	// Read All LineUsers
 	lineUser := []ConfiguringUser{}
@@ -80,9 +80,9 @@ func ReadConfiguringUser(lineID string, url string) ConfiguringUser {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("LineUser")
+	col := db.C("ConfiguringUser")
 
-	// Find LineUser by LineUser.LineID
+	// Find ConfiguringUser by ConfiguringUser.LineID
 	lineUser := ConfiguringUser{}
 	query := col.Find(bson.M{"line_id": lineID})
 	query.One(&lineUser)
@@ -99,9 +99,9 @@ func DeleteAllConfiguringUsers(url string) {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("LineUser")
+	col := db.C("ConfiguringUser")
 
-	// Remove All LineUsers
+	// Remove All ConfiguringUser
 	if _, err := col.RemoveAll(bson.M{}); err != nil {
 		log.Println(err)
 	}
@@ -116,9 +116,9 @@ func DeleteConfiguringUser(lineID string, url string) {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("LineUser")
+	col := db.C("ConfiguringUser")
 
-	// Remove LineUser by LineUser.LineID
+	// Remove ConfiguringUser by ConfiguringUser.LineID
 	if _, err := col.RemoveAll(bson.M{"line_id": lineID}); err != nil {
 		log.Println(err)
 	}
