@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"log"
+	"time"
 
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
@@ -9,9 +10,16 @@ import (
 
 // ConfiguringUser ..
 type ConfiguringUser struct {
-	LineID              string   `bson:"line_id"`
-	LineName            string   `bson:"line_name"`
-	RegisteredAddresses []string `bson:"registered_address"`
+	LineID             string           `bson:"line_id"`
+	LineName           string           `bson:"line_name"`
+	ConfiguringAddress []PendingAddress `bson:"configuring_address"`
+}
+
+// PendingAddress ..
+type PendingAddress struct {
+	Address          string    `bson:"address"`
+	VerificationCode string    `bson:"verification_code"`
+	CreatedAt        time.Time `bson:"created_at"`
 }
 
 // CreateIndexForConfiguringUser ..
