@@ -80,8 +80,8 @@ func ReadAllVerificationPendingAddress(url string) []VerificationPendingAddress 
 	return verificationPendingAddresses
 }
 
-// ReadConfiguringUser ..
-func ReadConfiguringUser(lineID string, url string) VerificationPendingAddress {
+// ReadVerificationPendingAddress ..
+func ReadVerificationPendingAddress(verificationCodeHash string, url string) VerificationPendingAddress {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -89,14 +89,14 @@ func ReadConfiguringUser(lineID string, url string) VerificationPendingAddress {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("ConfiguringUser")
+	col := db.C("VerificationPendingAddress")
 
-	// Find ConfiguringUser by ConfiguringUser.LineID
-	lineUser := VerificationPendingAddress{}
-	query := col.Find(bson.M{"line_id": lineID})
-	query.One(&lineUser)
+	// Find VerificationPendingAddress by VerificationPendingAddress.VerificationCodeHash
+	verificationPendingAddresses := VerificationPendingAddress{}
+	query := col.Find(bson.M{"verification_code_hash": verificationCodeHash})
+	query.One(&verificationPendingAddresses)
 
-	return lineUser
+	return verificationPendingAddresses
 }
 
 // DeleteAllConfiguringUsers ..
