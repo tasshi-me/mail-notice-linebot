@@ -16,7 +16,7 @@ type VerificationPendingAddress struct {
 	CreatedAt            time.Time `bson:"created_at"`
 }
 
-// CreateIndexForConfiguringUser ..
+// CreateIndexForVerificationPendingAddress ..
 func CreateIndexForVerificationPendingAddress(url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
@@ -28,13 +28,20 @@ func CreateIndexForVerificationPendingAddress(url string) {
 	col := db.C("VerificationPendingAddress")
 
 	//Create Index
-	index := mgo.Index{
-		Key:    []string{"line_id", "address"},
-		Unique: true,
+	indexes := []mgo.Index{
+		{
+			Key:    []string{"line_id", "address"},
+			Unique: true,
+		}, {
+			Key:    []string{"verification_code_hash"},
+			Unique: true,
+		},
 	}
-	err = col.EnsureIndex(index)
-	if err != nil {
-		log.Fatal(err)
+	for _, index := range indexes {
+		err = col.EnsureIndex(index)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
