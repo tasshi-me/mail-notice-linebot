@@ -8,22 +8,16 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
-// ConfiguringUser ..
-type ConfiguringUser struct {
-	LineID             string           `bson:"line_id"`
-	LineName           string           `bson:"line_name"`
-	ConfiguringAddress []PendingAddress `bson:"configuring_address"`
-}
-
-// PendingAddress ..
-type PendingAddress struct {
-	Address          string    `bson:"address"`
-	VerificationCode string    `bson:"verification_code"`
-	CreatedAt        time.Time `bson:"created_at"`
+// VerificationPendingAddress ..
+type VerificationPendingAddress struct {
+	LineID               string    `bson:"line_id"`
+	Address              string    `bson:"address"`
+	VerificationCodeHash string    `bson:"verification_code_hash"`
+	CreatedAt            time.Time `bson:"created_at"`
 }
 
 // CreateIndexForConfiguringUser ..
-func CreateIndexForConfiguringUser(url string) {
+func CreateIndexForVerificationPendingAddress(url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -31,11 +25,11 @@ func CreateIndexForConfiguringUser(url string) {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("ConfiguringUser")
+	col := db.C("VerificationPendingAddress")
 
 	//Create Index
 	index := mgo.Index{
-		Key:    []string{"line_id"},
+		Key:    []string{"line_id", "address"},
 		Unique: true,
 	}
 	err = col.EnsureIndex(index)
@@ -45,7 +39,7 @@ func CreateIndexForConfiguringUser(url string) {
 }
 
 // CreateOrUpdateConfiguringUser ..
-func CreateOrUpdateConfiguringUser(configuringUser ConfiguringUser, url string) {
+func CreateOrUpdateConfiguringUser(verificationPendingAddress VerificationPendingAddress, url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -61,7 +55,7 @@ func CreateOrUpdateConfiguringUser(configuringUser ConfiguringUser, url string) 
 }
 
 // ReadAllConfiguringUsers ..
-func ReadAllConfiguringUsers(url string) []ConfiguringUser {
+func ReadAllConfiguringUsers(url string) []VerificationPendingAddress {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -72,7 +66,7 @@ func ReadAllConfiguringUsers(url string) []ConfiguringUser {
 	col := db.C("ConfiguringUser")
 
 	// Read All LineUsers
-	lineUser := []ConfiguringUser{}
+	lineUser := []VerificationPendingAddress{}
 	query := col.Find(bson.M{})
 	query.All(&lineUser)
 
@@ -80,7 +74,7 @@ func ReadAllConfiguringUsers(url string) []ConfiguringUser {
 }
 
 // ReadConfiguringUser ..
-func ReadConfiguringUser(lineID string, url string) ConfiguringUser {
+func ReadConfiguringUser(lineID string, url string) VerificationPendingAddress {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -91,7 +85,7 @@ func ReadConfiguringUser(lineID string, url string) ConfiguringUser {
 	col := db.C("ConfiguringUser")
 
 	// Find ConfiguringUser by ConfiguringUser.LineID
-	lineUser := ConfiguringUser{}
+	lineUser := VerificationPendingAddress{}
 	query := col.Find(bson.M{"line_id": lineID})
 	query.One(&lineUser)
 
