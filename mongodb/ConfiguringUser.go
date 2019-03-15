@@ -99,8 +99,8 @@ func ReadVerificationPendingAddress(verificationCodeHash string, url string) Ver
 	return verificationPendingAddresses
 }
 
-// DeleteAllConfiguringUsers ..
-func DeleteAllConfiguringUsers(url string) {
+// DeleteAllVerificationPendingAddress ..
+func DeleteAllVerificationPendingAddress(url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -108,9 +108,9 @@ func DeleteAllConfiguringUsers(url string) {
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("ConfiguringUser")
+	col := db.C("VerificationPendingAddress")
 
-	// Remove All ConfiguringUser
+	// Remove All VerificationPendingAddress
 	if _, err := col.RemoveAll(bson.M{}); err != nil {
 		log.Println(err)
 	}
