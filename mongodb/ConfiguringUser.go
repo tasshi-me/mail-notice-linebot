@@ -45,8 +45,8 @@ func CreateIndexForVerificationPendingAddress(url string) {
 	}
 }
 
-// CreateOrUpdateConfiguringUser ..
-func CreateOrUpdateConfiguringUser(verificationPendingAddress VerificationPendingAddress, url string) {
+// CreateOrUpdateVerificationPendingAddress ..
+func CreateOrUpdateVerificationPendingAddress(verificationPendingAddress VerificationPendingAddress, url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -54,9 +54,9 @@ func CreateOrUpdateConfiguringUser(verificationPendingAddress VerificationPendin
 	defer session.Close()
 
 	db := session.DB("")
-	col := db.C("ConfiguringUser")
+	col := db.C("VerificationPendingAddress")
 
-	if _, err := col.Upsert(bson.M{"line_id": configuringUser.LineID}, &configuringUser); err != nil {
+	if _, err := col.Upsert(bson.M{"line_id": verificationPendingAddress.LineID, "address": verificationPendingAddress.Address}, &verificationPendingAddress); err != nil {
 		log.Println(err)
 	}
 }
