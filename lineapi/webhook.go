@@ -70,7 +70,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 					if err != nil {
 						contentText = err.Error()
 					} else {
-						contentText = "メールアドレスが確認されました\n" + address
+						contentText = "メールアドレスが確認されました\n" + address + "\n以下のメールアドレス宛にメール転送設定を行うとお知らせが来るようになります\n" + configVars.IMAP.Address
 					}
 					message := linebot.NewTextMessage(contentText)
 					if _, err := bot.ReplyMessage(replyToken, message).Do(); err != nil {
