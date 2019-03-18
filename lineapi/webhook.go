@@ -3,11 +3,9 @@ package lineapi
 import (
 	"log"
 	"net/http"
-	"net/mail"
 	"strings"
 
 	"../helper"
-	"../mailmanager"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
@@ -99,17 +97,4 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			// Do Nothing
 		}
 	}
-}
-
-// SendVerificationMail ..
-func SendVerificationMail(userName, userAddress, verificationKey string) {
-	configVars := helper.ConfigVars()
-	from := mail.Address{Name: configVars.SMTP.SenderUsername, Address: configVars.SMTP.SenderAddress}
-	to := mail.Address{Name: userName, Address: userAddress}
-	subject := "LINEBOT: メールお知らせくん登録確認"
-	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：" + verificationKey
-	smptServerName := configVars.SMTP.ServerName
-	smtpAuthUser := configVars.SMTP.AuthUser
-	smtpAuthPassword := configVars.SMTP.AuthPassword
-	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }

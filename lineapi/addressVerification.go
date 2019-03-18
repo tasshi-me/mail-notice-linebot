@@ -3,9 +3,11 @@ package lineapi
 import (
 	"crypto/sha256"
 	"errors"
+	"net/mail"
 	"time"
 
 	"../helper"
+	"../mailmanager"
 	"../mongodb"
 )
 
@@ -44,4 +46,17 @@ func VerifyAddress(lineID string, verificationCode string) error {
 	lineUser.RegisteredAddresses = append(lineUser.RegisteredAddresses, verificationPendingAddress.Address)
 	return nil
 
+}
+
+// SendVerificationMail ..
+func SendVerificationMail(userName, userAddress, verificationKey string) {
+	configVars := helper.ConfigVars()
+	from := mail.Address{Name: configVars.SMTP.SenderUsername, Address: configVars.SMTP.SenderAddress}
+	to := mail.Address{Name: userName, Address: userAddress}
+	subject := "LINEBOT: メールお知らせくん登録確認"
+	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：" + verificationKey
+	smptServerName := configVars.SMTP.ServerName
+	smtpAuthUser := configVars.SMTP.AuthUser
+	smtpAuthPassword := configVars.SMTP.AuthPassword
+	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }
