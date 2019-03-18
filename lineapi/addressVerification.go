@@ -7,13 +7,12 @@ import (
 
 	"../helper"
 	"../mongodb"
-	"github.com/globalsign/mgo/bson"
 )
 
 // GenerateVerificationCode ..
-func GenerateVerificationCode(lineID string, address string) {
+func GenerateVerificationCode(lineID string, address string) string {
 	configVars := helper.ConfigVars()
-	verificationCode := bson.NewObjectId().String()
+	verificationCode := "VC-" + helper.CreateRandomString(64)
 	verificationCodeHash := sha256.Sum256([]byte(verificationCode))
 	verificationPendingAddress := mongodb.VerificationPendingAddress{
 		LineID:               lineID,
@@ -22,6 +21,7 @@ func GenerateVerificationCode(lineID string, address string) {
 		CreatedAt:            time.Now(),
 	}
 	mongodb.CreateOrUpdateVerificationPendingAddress(verificationPendingAddress, configVars.MongodbURI)
+	return verificationCode
 }
 
 // VerifyAddress ..
