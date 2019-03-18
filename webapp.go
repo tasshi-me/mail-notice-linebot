@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -16,6 +17,9 @@ func main() {
 	if len(configVars.EnvLoaded) < 1 {
 		helper.DotEnvLoad()
 	}
+
+	// Init rand
+	rand.Seed(time.Now().UnixNano())
 
 	// Init DB
 	mongodbURL := configVars.MongodbURI

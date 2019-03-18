@@ -4,7 +4,6 @@ import (
 	"log"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
@@ -85,7 +84,6 @@ func SendRandomReply(bot *linebot.Client, replyToken string) {
 		"新しいメールはたぶんありません！",
 	}
 	// Randomize reply
-	rand.Seed(time.Now().UnixNano())
 	i := rand.Intn(len(contentPatterns))
 	message := linebot.NewTextMessage(contentPatterns[i])
 	// Send messages
