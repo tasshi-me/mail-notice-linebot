@@ -66,6 +66,8 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 					SendConfirmSetupForwarding(bot, replyToken)
 				case strings.Contains(message.Text, "お知らせ解除"):
 					SendConfirmRevokeForwarding(bot, replyToken)
+				case strings.HasPrefix(message.Text, "vcode"):
+					VerifyAddress(targetID, message.Text)
 				}
 
 			}
