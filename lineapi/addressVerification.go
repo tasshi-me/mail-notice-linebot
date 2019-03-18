@@ -12,7 +12,7 @@ import (
 // GenerateVerificationCode ..
 func GenerateVerificationCode(lineID string, address string) string {
 	configVars := helper.ConfigVars()
-	verificationCode := "VC-" + helper.CreateRandomString(64)
+	verificationCode := "VC-" + helper.GenerateRandomString(64)
 	verificationCodeHash := sha256.Sum256([]byte(verificationCode))
 	verificationPendingAddress := mongodb.VerificationPendingAddress{
 		LineID:               lineID,
