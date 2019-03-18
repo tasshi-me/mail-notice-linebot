@@ -44,8 +44,12 @@ func VerifyAddress(lineID string, verificationCode string) (string, error) {
 	}
 
 	lineUser := mongodb.ReadLineUser(lineID, configVars.MongodbURI)
+	if len(lineUser.LineID) == 0 {
+		lineUser.LineID = lineID
+	}
 	lineUser.RegisteredAddresses = append(lineUser.RegisteredAddresses, verificationPendingAddress.Address)
 	mongodb.DeleteVerificationPendingAddress(lineID, string(verificationCodeHash[:]), configVars.MongodbURI)
+	mongodb.CreateOrUpdateLineUser(lineUser, configVars.MongodbURI)
 	return verificationPendingAddress.Address, nil
 
 }
