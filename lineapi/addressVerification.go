@@ -30,14 +30,14 @@ func VerifyAddress(lineID string, verificationCode string) error {
 
 	verificationCodeHash := sha256.Sum256([]byte(verificationCode))
 	verificationPendingAddress := mongodb.ReadVerificationPendingAddress(string(verificationCodeHash[:]), configVars.MongodbURI)
-	if time.Now().Sub(verificationPendingAddress.CreatedAt) > time.Minute*5 {
-		return errors.New("確認コードの有効期限が切れました")
-	}
 	if verificationPendingAddress.LineID != lineID {
 		return errors.New("無効な確認コードです")
 	}
 	if verificationPendingAddress.VerificationCodeHash != string(verificationCodeHash[:]) {
 		return errors.New("無効な確認コードです")
+	}
+	if time.Now().Sub(verificationPendingAddress.CreatedAt) > time.Minute*5 {
+		return errors.New("確認コードの有効期限が切れました")
 	}
 
 	lineUser := mongodb.ReadLineUser(lineID, configVars.MongodbURI)
