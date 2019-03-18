@@ -117,7 +117,7 @@ func DeleteAllVerificationPendingAddress(url string) {
 }
 
 // DeleteVerificationPendingAddress ..
-func DeleteVerificationPendingAddress(lineID string, url string) {
+func DeleteVerificationPendingAddress(lineID string, verificationCodeHash string, url string) {
 	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatal("mgo.Dial: ", err)
@@ -128,7 +128,7 @@ func DeleteVerificationPendingAddress(lineID string, url string) {
 	col := db.C("VerificationPendingAddress")
 
 	// Remove VerificationPendingAddress by VerificationPendingAddress.LineID
-	if _, err := col.RemoveAll(bson.M{"line_id": lineID}); err != nil {
+	if _, err := col.RemoveAll(bson.M{"line_id": lineID, "verification_code_hash": verificationCodeHash}); err != nil {
 		log.Println(err)
 	}
 }

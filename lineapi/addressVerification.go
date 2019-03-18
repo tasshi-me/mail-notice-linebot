@@ -3,9 +3,11 @@ package lineapi
 import (
 	"crypto/sha256"
 	"errors"
+	"net/mail"
 	"time"
 
 	"../helper"
+	"../mailmanager"
 	"../mongodb"
 )
 
@@ -25,23 +27,42 @@ func GenerateVerificationCode(lineID string, address string) string {
 }
 
 // VerifyAddress ..
-func VerifyAddress(lineID string, verificationCode string) error {
+func VerifyAddress(lineID string, verificationCode string) (string, error) {
 	configVars := helper.ConfigVars()
 
 	verificationCodeHash := sha256.Sum256([]byte(verificationCode))
 	verificationPendingAddress := mongodb.ReadVerificationPendingAddress(string(verificationCodeHash[:]), configVars.MongodbURI)
 	if verificationPendingAddress.LineID != lineID {
-		return errors.New("無効な確認コードです")
+		return "", errors.New("無効な確認コードです")
 	}
 	if verificationPendingAddress.VerificationCodeHash != string(verificationCodeHash[:]) {
-		return errors.New("無効な確認コードです")
+		return "", errors.New("無効な確認コードです")
 	}
 	if time.Now().Sub(verificationPendingAddress.CreatedAt) > time.Minute*5 {
-		return errors.New("確認コードの有効期限が切れました")
+		mongodb.DeleteVerificationPendingAddress(lineID, string(verificationCodeHash[:]), configVars.MongodbURI)
+		return "", errors.New("確認コードの有効期限が切れました")
 	}
 
 	lineUser := mongodb.ReadLineUser(lineID, configVars.MongodbURI)
+	if len(lineUser.LineID) == 0 {
+		lineUser.LineID = lineID
+	}
 	lineUser.RegisteredAddresses = append(lineUser.RegisteredAddresses, verificationPendingAddress.Address)
-	return nil
+	mongodb.DeleteVerificationPendingAddress(lineID, string(verificationCodeHash[:]), configVars.MongodbURI)
+	mongodb.CreateOrUpdateLineUser(lineUser, configVars.MongodbURI)
+	return verificationPendingAddress.Address, nil
 
+}
+
+// SendVerificationMail ..
+func SendVerificationMail(userName, userAddress, verificationKey string) {
+	configVars := helper.ConfigVars()
+	from := mail.Address{Name: configVars.SMTP.SenderUsername, Address: configVars.SMTP.SenderAddress}
+	to := mail.Address{Name: userName, Address: userAddress}
+	subject := "LINEBOT: メールお知らせくん登録確認"
+	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：" + verificationKey
+	smptServerName := configVars.SMTP.ServerName
+	smtpAuthUser := configVars.SMTP.AuthUser
+	smtpAuthPassword := configVars.SMTP.AuthPassword
+	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }

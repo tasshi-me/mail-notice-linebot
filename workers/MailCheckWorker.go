@@ -14,11 +14,11 @@ import (
 func MailCheck() {
 	configVars := helper.ConfigVars()
 	mboxName := configVars.IMAP.MboxName
-	dateSince := time.Now().AddDate(0, 0, -1)
-	dateBefore := time.Now().AddDate(0, 0, 1)
+	dateSince := time.Now().AddDate(0, 0, -2)
+	dateBefore := time.Now().AddDate(0, 0, 2)
 
-	messages := mailmanager.FetchMail(dateSince, dateBefore, mboxName, configVars.IMAP.ServerName, configVars.IMAP.AuthUser, configVars.IMAP.AuthPassword)
-	//messages := mailmanager.PopMail(dateSince, dateBefore, mboxName, configVars.IMAP.ServerName, configVars.IMAP.AuthUser, configVars.IMAP.AuthPassword)
+	//messages := mailmanager.FetchMail(dateSince, dateBefore, mboxName, configVars.IMAP.ServerName, configVars.IMAP.AuthUser, configVars.IMAP.AuthPassword)
+	messages := mailmanager.PopMail(dateSince, dateBefore, mboxName, configVars.IMAP.ServerName, configVars.IMAP.AuthUser, configVars.IMAP.AuthPassword)
 	log.Println("fetched messages: ", len(messages))
 	// for _, msg := range messages {
 	// 	log.Println(msg.Envelope.Date.String() + ":" + msg.Envelope.Subject)

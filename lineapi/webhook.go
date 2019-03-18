@@ -3,11 +3,9 @@ package lineapi
 import (
 	"log"
 	"net/http"
-	"net/mail"
 	"strings"
 
 	"../helper"
-	"../mailmanager"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
@@ -63,28 +61,41 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 				case strings.Contains(message.Text, "メールお知らせ"):
 					fallthrough
 				case strings.Contains(message.Text, "メールおしらせ"):
-					SendConfirmSetupForwarding(bot, replyToken)
+					SendConfirmSetupForwarding(bot, replyToken, targetID)
 				case strings.Contains(message.Text, "お知らせ解除"):
-					SendConfirmRevokeForwarding(bot, replyToken)
-				case strings.HasPrefix(message.Text, "vcode"):
-					VerifyAddress(targetID, message.Text)
+					SendConfirmRevokeForwarding(bot, replyToken, targetID)
+				case strings.HasPrefix(message.Text, "VC-"):
+					address, err := VerifyAddress(targetID, message.Text)
+					var contentText string
+					if err != nil {
+						contentText = err.Error()
+					} else {
+						contentText = "メールアドレスが確認されました\n" + address + "\n以下のメールアドレス宛にメール転送設定を行うとお知らせが来るようになります\n" + configVars.IMAP.Address
+					}
+					message := linebot.NewTextMessage(contentText)
+					if _, err := bot.ReplyMessage(replyToken, message).Do(); err != nil {
+						log.Print(err)
+					}
+				case strings.Contains(message.Text, "@"):
+					PushAddressToConfigureQueue(bot, replyToken, targetID, message.Text)
+				case message.Text == ".":
+					FinishConfigureAddress(bot, replyToken, targetID)
+				default:
+					if eventSourceType == linebot.EventSourceTypeUser {
+						SendRandomReply(bot, replyToken)
+					}
 				}
-
 			}
-			if eventSourceType == linebot.EventSourceTypeUser {
-				SendRandomReply(bot, replyToken)
-			}
-
 		case linebot.EventTypeFollow:
 			// Send Introduction to user
 			SendIntroduction(bot, replyToken)
 		case linebot.EventTypeUnfollow:
-			// TODO: Delete User from database
+			RevokeRegisteredUser(bot, replyToken, targetID)
 		case linebot.EventTypeJoin:
 			// Send Introduction to the group
 			SendIntroduction(bot, replyToken)
 		case linebot.EventTypeLeave:
-			// TODO: Delete group from database
+			RevokeRegisteredUser(bot, replyToken, targetID)
 		case linebot.EventTypeMemberJoined:
 			// Send message to Joined User
 			// Default send nothing
@@ -92,6 +103,13 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			// Send message to Left User
 			// Default send nothing
 		case linebot.EventTypePostback:
+			data := event.Postback.Data
+			if data == "setup=true" {
+				StartConfigureAddress(bot, replyToken, targetID)
+			}
+			if data == "revoke=true" {
+				RevokeRegisteredUser(bot, replyToken, targetID)
+			}
 			// Do Nothing
 		case linebot.EventTypeBeacon:
 			// Do Nothing
@@ -99,17 +117,4 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			// Do Nothing
 		}
 	}
-}
-
-// SendVerificationMail ..
-func SendVerificationMail(userName, userAddress, verificationKey string) {
-	configVars := helper.ConfigVars()
-	from := mail.Address{Name: configVars.SMTP.SenderUsername, Address: configVars.SMTP.SenderAddress}
-	to := mail.Address{Name: userName, Address: userAddress}
-	subject := "LINEBOT: メールお知らせくん登録確認"
-	body := "この度はメールお知らせくんのご利用ありがとうございます。\n LINEの戻って以下の確認コードを送信してください。\n 確認コード：" + verificationKey
-	smptServerName := configVars.SMTP.ServerName
-	smtpAuthUser := configVars.SMTP.AuthUser
-	smtpAuthPassword := configVars.SMTP.AuthPassword
-	mailmanager.SendMail(from, to, subject, body, smptServerName, smtpAuthUser, smtpAuthPassword)
 }

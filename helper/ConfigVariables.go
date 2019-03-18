@@ -30,6 +30,7 @@ func ConfigVars() ConfigVariables {
 		},
 
 		IMAP: IMAPConfigVariables{
+			Address:      os.Getenv("IMAP_ADDRESS"),
 			ServerName:   os.Getenv("IMAP_SERVER_NAME"),
 			AuthUser:     os.Getenv("IMAP_AUTH_USER"),
 			AuthPassword: os.Getenv("IMAP_AUTH_PASSWORD"),
@@ -73,6 +74,7 @@ type SMTPConfigVariables struct {
 
 // IMAPConfigVariables ..
 type IMAPConfigVariables struct {
+	Address      string
 	ServerName   string
 	AuthUser     string
 	AuthPassword string
