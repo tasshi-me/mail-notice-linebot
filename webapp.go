@@ -24,6 +24,8 @@ func main() {
 	// Init DB
 	mongodbURL := configVars.MongodbURI
 	mongodb.CreateIndexForLineUser(mongodbURL)
+	mongodb.CreateIndexForOnConfigureUser(mongodbURL)
+	mongodb.CreateIndexForVerificationPendingAddress(mongodbURL)
 
 	// Start Keep-Alive Worker for Heroku
 	herokuAppName := configVars.HerokuAppName
