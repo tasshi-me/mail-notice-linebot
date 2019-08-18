@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"./helper"
-	"./lineapi"
-	"./mongodb"
-	"./workers"
+	"github.com/mshrtsr/mail-notice-linebot/helper"
+	"github.com/mshrtsr/mail-notice-linebot/lineapi"
+	"github.com/mshrtsr/mail-notice-linebot/mongodb"
+	"github.com/mshrtsr/mail-notice-linebot/workers"
 )
 
 func main() {

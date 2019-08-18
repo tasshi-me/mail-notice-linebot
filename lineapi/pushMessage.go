@@ -4,8 +4,8 @@ import (
 	"log"
 	"strconv"
 
-	"../helper"
-	"../mailmanager"
+	"github.com/mshrtsr/mail-notice-linebot/helper"
+	"github.com/mshrtsr/mail-notice-linebot/mailmanager"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 

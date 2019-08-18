@@ -5,16 +5,16 @@ RUN apk add -U --no-cache \
   make \
   && rm -rf /var/cache/apk/*
 
-RUN mkdir  %USERPROFILE%\go\src\postgresqlgo
-RUN cd %USERPROFILE%\go\src\postgresqlgo
-RUN set GOPATH=%USERPROFILE%\go
-RUN go get github.com/line/line-bot-sdk-go/linebot
-RUN go get github.com/emersion/go-imap/client
-RUN go get github.com/joho/godotenv
-RUN go get github.com/globalsign/mgo
+ENV GO111MODULE on
+ENV GOFLAGS=-mod=vendor
 
-WORKDIR /go
-ADD . /go
+# Recompile the standard library without CGO
+RUN CGO_ENABLED=0 go install -a std
+
+ENV APP_DIR $GOPATH/src/github.com/mshrtsr/mail-notice-linebot/
+WORKDIR ${APP_DIR}
+
+COPY . $APP_DIR
 RUN ["make"]
 
 FROM alpine:latest
@@ -23,6 +23,7 @@ RUN apk add -U --no-cache \
   && update-ca-certificates 2>/dev/null || true \
   && rm -rf /var/cache/apk/*
 
-WORKDIR /go
-COPY --from=builder /go/webapp_linux_amd64 /go/webapp_linux_amd64
+ENV APP_DIR /go/src/github.com/mshrtsr/mail-notice-linebot/
+WORKDIR ${APP_DIR}
+COPY --from=builder ${APP_DIR}/webapp_linux_amd64 ${APP_DIR}/webapp_linux_amd64
 CMD ["./webapp_linux_amd64"]

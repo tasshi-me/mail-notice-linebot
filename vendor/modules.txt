@@ -1,0 +1,22 @@
+# github.com/emersion/go-imap v1.0.0
+github.com/emersion/go-imap
+github.com/emersion/go-imap/client
+github.com/emersion/go-imap/utf7
+github.com/emersion/go-imap/commands
+github.com/emersion/go-imap/responses
+# github.com/emersion/go-sasl v0.0.0-20190520160400-47d427600317
+github.com/emersion/go-sasl
+# github.com/globalsign/mgo v0.0.0-20181015135952-eeefdecb41b8
+github.com/globalsign/mgo
+github.com/globalsign/mgo/bson
+github.com/globalsign/mgo/internal/sasl
+github.com/globalsign/mgo/internal/scram
+github.com/globalsign/mgo/internal/json
+# github.com/joho/godotenv v1.3.0
+github.com/joho/godotenv
+# github.com/line/line-bot-sdk-go v6.3.0+incompatible
+github.com/line/line-bot-sdk-go/linebot
+# golang.org/x/text v0.3.2
+golang.org/x/text/encoding
+golang.org/x/text/transform
+golang.org/x/text/encoding/internal/identifier

@@ -1,7 +1,7 @@
 package mailmanager
 
 import (
-	"../mongodb"
+	"github.com/mshrtsr/mail-notice-linebot/mongodb"
 
 	"github.com/emersion/go-imap"
 )

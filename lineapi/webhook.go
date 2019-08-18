@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"../helper"
+	"github.com/mshrtsr/mail-notice-linebot/helper"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
