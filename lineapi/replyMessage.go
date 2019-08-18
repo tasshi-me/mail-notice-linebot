@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"../helper"
-	"../mongodb"
+	"github.com/mshrtsr/mail-notice-linebot/helper"
+	"github.com/mshrtsr/mail-notice-linebot/mongodb"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 

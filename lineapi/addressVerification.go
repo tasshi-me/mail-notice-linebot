@@ -6,9 +6,9 @@ import (
 	"net/mail"
 	"time"
 
-	"../helper"
-	"../mailmanager"
-	"../mongodb"
+	"github.com/mshrtsr/mail-notice-linebot/helper"
+	"github.com/mshrtsr/mail-notice-linebot/mailmanager"
+	"github.com/mshrtsr/mail-notice-linebot/mongodb"
 )
 
 // GenerateVerificationCode ..
