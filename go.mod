@@ -1,4 +1,4 @@
-module github.com/mshrtsr/mail-notice-linebot
+module github.com/tasshi-me/mail-notice-linebot
 
 go 1.12
 

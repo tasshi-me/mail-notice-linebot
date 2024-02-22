@@ -4,9 +4,9 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/mshrtsr/mail-notice-linebot/helper"
-	"github.com/mshrtsr/mail-notice-linebot/mailmanager"
 	"github.com/line/line-bot-sdk-go/linebot"
+	"github.com/tasshi-me/mail-notice-linebot/helper"
+	"github.com/tasshi-me/mail-notice-linebot/mailmanager"
 )
 
 // SendPushNotification ..
